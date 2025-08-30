@@ -39,10 +39,7 @@ export default function Leaderboard() {
     return `${index + 1}.`;
   };
 
-  const getRankColor = (index: number) => {
-    if (index === 0) return 'bg-yellow-100 border-yellow-300';
-    if (index === 1) return 'bg-gray-100 border-gray-300';
-    if (index === 2) return 'bg-amber-100 border-amber-300';
+  const getRankColor = () => {
     return 'bg-white border-gray-200';
   };
 
@@ -65,8 +62,8 @@ export default function Leaderboard() {
           </Link>
         </div>
 
-        {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Stats Summary - Hidden on mobile */}
+        <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-lg p-6 text-center">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Mugs</h3>
             <div className="text-3xl font-bold text-purple-600">{mugs.length}</div>
@@ -95,15 +92,15 @@ export default function Leaderboard() {
             {mugs.map((mug, index) => (
               <div 
                 key={mug.id} 
-                className={`p-6 flex items-center space-x-6 hover:bg-gray-50 transition-colors border-l-4 ${getRankColor(index)}`}
+                className={`p-4 md:p-6 flex items-center space-x-3 md:space-x-6 hover:bg-gray-50 transition-colors border-l-4 ${getRankColor()}`}
               >
                 {/* Rank */}
-                <div className="text-2xl font-bold w-12 text-center">
+                <div className="text-lg md:text-2xl font-bold w-8 md:w-12 text-center flex-shrink-0">
                   {getRankEmoji(index)}
                 </div>
 
                 {/* Mug Image */}
-                <div className="w-20 h-20 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
+                <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
                   <img
                     src={`/mugs/${mug.filename}`}
                     alt={mug.name}
@@ -111,28 +108,28 @@ export default function Leaderboard() {
                   />
                 </div>
 
-                {/* Mug Info */}
-                <div className="flex-grow">
-                  <h3 className="text-xl font-semibold capitalize text-gray-800 mb-1">
+                {/* Mug Info - Allow text to wrap */}
+                <div className="flex-grow min-w-0">
+                  <h3 className="text-lg md:text-xl font-semibold capitalize text-gray-800 mb-1 break-words">
                     {mug.name}
                   </h3>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-xs md:text-sm text-gray-500">
                     {mug.wins + mug.losses} total battles
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-gray-800 mb-1">
+                <div className="text-right flex-shrink-0">
+                  <div className="text-lg md:text-2xl font-bold text-gray-800 mb-1">
                     {(mug.winPercentage * 100).toFixed(1)}%
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-xs md:text-sm text-gray-500">
                     {mug.wins}W - {mug.losses}L
                   </div>
                 </div>
 
-                {/* Win Rate Bar */}
-                <div className="w-24">
+                {/* Win Rate Bar - Hide on mobile for space */}
+                <div className="hidden md:block w-24 flex-shrink-0">
                   <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div 
                       className="bg-gradient-to-r from-purple-500 to-blue-500 h-full transition-all duration-300"

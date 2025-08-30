@@ -64,7 +64,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-800 mb-4 whitespace-nowrap">
             🏆 Mug Tournament 🏆
           </h1>
           <p className="text-lg text-gray-600 mb-6">
@@ -103,9 +103,6 @@ export default function Home() {
                   <h3 className="text-xl font-semibold capitalize text-gray-800 group-hover:text-blue-600">
                     {mug1.name}
                   </h3>
-                  <div className="text-sm text-gray-500 mt-2">
-                    {mug1.wins}W - {mug1.losses}L ({(mug1.winPercentage * 100).toFixed(1)}%)
-                  </div>
                 </button>
               </div>
 
@@ -131,9 +128,6 @@ export default function Home() {
                   <h3 className="text-xl font-semibold capitalize text-gray-800 group-hover:text-red-600">
                     {mug2.name}
                   </h3>
-                  <div className="text-sm text-gray-500 mt-2">
-                    {mug2.wins}W - {mug2.losses}L ({(mug2.winPercentage * 100).toFixed(1)}%)
-                  </div>
                 </button>
               </div>
             </div>
