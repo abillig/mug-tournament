@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/lib/db.ts": {
+      "maxDuration": 10
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
