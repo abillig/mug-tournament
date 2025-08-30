@@ -60,6 +60,9 @@ export default function Leaderboard() {
           >
             Back to Tournament
           </Link>
+          <p className="text-sm text-gray-600 mt-3">
+            Click on any mug image or name to view its detailed profile
+          </p>
         </div>
 
         {/* Stats Summary - Hidden on mobile */}
@@ -99,20 +102,22 @@ export default function Leaderboard() {
                   {getRankEmoji(index)}
                 </div>
 
-                {/* Mug Image */}
-                <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
+                {/* Mug Image - Clickable */}
+                <Link href={`/mug/${mug.id}`} className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer">
                   <img
                     src={`/mugs/${mug.filename}`}
                     alt={mug.name}
-                    className="max-w-full max-h-full object-contain"
+                    className="max-w-full max-h-full object-contain hover:scale-105 transition-transform"
                   />
-                </div>
+                </Link>
 
-                {/* Mug Info - Allow text to wrap */}
+                {/* Mug Info - Allow text to wrap, make name clickable */}
                 <div className="flex-grow min-w-0">
-                  <h3 className="text-lg md:text-xl font-semibold capitalize text-gray-800 mb-1 break-words">
-                    {mug.name}
-                  </h3>
+                  <Link href={`/mug/${mug.id}`}>
+                    <h3 className="text-lg md:text-xl font-semibold capitalize text-gray-800 mb-1 break-words hover:text-blue-600 transition-colors cursor-pointer">
+                      {mug.name}
+                    </h3>
+                  </Link>
                   <div className="text-xs md:text-sm text-gray-500">
                     {mug.wins + mug.losses} total battles
                   </div>
