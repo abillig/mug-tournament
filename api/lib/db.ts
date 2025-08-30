@@ -1,6 +1,4 @@
 import Database from 'better-sqlite3';
-import { readdirSync } from 'fs';
-import path from 'path';
 
 export interface Mug {
   id: number;
@@ -22,7 +20,10 @@ let db: Database.Database;
 
 export function getDB() {
   if (!db) {
-    db = new Database('mug-tournament.db');
+    const dbPath = process.env.NODE_ENV === 'production' 
+      ? '/tmp/mug-tournament.db' 
+      : 'mug-tournament.db';
+    db = new Database(dbPath);
     initializeDB();
   }
   return db;
@@ -60,21 +61,29 @@ function initializeDB() {
 }
 
 function seedMugs() {
-  const mugsDir = path.join(process.cwd(), 'public/mugs');
-  const files = readdirSync(mugsDir).filter(file => file.endsWith('.png'));
+  // Hardcoded list of mugs for production reliability
+  const mugFiles = [
+    'acadia.png', 'aqua.png', 'bacteria.png', 'beatles.png', 'bicycles.png',
+    'blue-lavender.png', 'blue-white.png', 'blue.png', 'breathe.png', 'california.png',
+    'carbapenem.png', 'cat.png', 'christmas.png', 'clay.png', 'efron.png',
+    'friends.png', 'heaven.png', 'how-you-doin.png', 'internet.png', 'journal-news.png',
+    'kensington.png', 'lamour-toujours.png', 'milagro.png', 'montreal.png', 'nechama.png',
+    'olympia.png', 'pink.png', 'polka-dot.png', 'presidents.png', 'rabbit.png',
+    'sleep.png', 'st-donat.png', 'vibras.png'
+  ];
   
   const insert = db.prepare('INSERT INTO mugs (name, filename) VALUES (?, ?)');
   const insertMany = db.transaction((mugs: { name: string, filename: string }[]) => {
     for (const mug of mugs) insert.run(mug.name, mug.filename);
   });
 
-  const mugData = files.map(file => ({
+  const mugData = mugFiles.map(file => ({
     name: file.replace('.png', '').replace(/-/g, ' '),
     filename: file
   }));
 
   insertMany(mugData);
-  console.log(`Initialized ${files.length} mugs in database`);
+  console.log(`Initialized ${mugFiles.length} mugs in database`);
 }
 
 export function getAllMugs(): Mug[] {
