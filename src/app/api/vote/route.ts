@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid vote data' }, { status: 400 });
     }
     
-    recordVote(winnerId, loserId);
+    await recordVote(winnerId, loserId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error recording vote:', error);

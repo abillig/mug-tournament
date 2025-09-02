@@ -4,7 +4,7 @@ import { getDB, getLeaderboard } from '../../../../api/lib/db';
 export async function GET() {
   try {
     getDB(); // Initialize database
-    const leaderboard = getLeaderboard();
+    const leaderboard = await getLeaderboard();
     return NextResponse.json(leaderboard);
   } catch (error) {
     console.error('Error fetching leaderboard:', error);

@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import { createClient } from '@libsql/client';
 
 export interface Mug {
   id: number;
@@ -16,22 +16,35 @@ export interface Vote {
   timestamp: string;
 }
 
-let db: Database.Database;
+let client: ReturnType<typeof createClient>;
 
 export function getDB() {
-  if (!db) {
-    const dbPath = process.env.NODE_ENV === 'production' 
-      ? '/tmp/mug-tournament.db' 
-      : 'mug-tournament.db';
-    db = new Database(dbPath);
+  if (!client) {
+    // Use Turso in production, SQLite locally
+    if (process.env.NODE_ENV === 'production') {
+      if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+        throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set in production');
+      }
+      client = createClient({
+        url: process.env.TURSO_DATABASE_URL,
+        authToken: process.env.TURSO_AUTH_TOKEN,
+      });
+    } else {
+      // Local SQLite file for development
+      client = createClient({
+        url: 'file:mug-tournament.db',
+      });
+    }
     initializeDB();
   }
-  return db;
+  return client;
 }
 
-function initializeDB() {
+async function initializeDB() {
+  const db = getDB();
+  
   // Create mugs table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS mugs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL,
@@ -42,7 +55,7 @@ function initializeDB() {
   `);
 
   // Create votes table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS votes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       winner_id INTEGER NOT NULL,
@@ -53,14 +66,16 @@ function initializeDB() {
     )
   `);
 
-  // Initialize mugs from image files if table is empty
-  const mugCount = db.prepare('SELECT COUNT(*) as count FROM mugs').get() as { count: number };
-  if (mugCount.count === 0) {
-    seedMugs();
+  // Initialize mugs from hardcoded list if table is empty
+  const result = await db.execute('SELECT COUNT(*) as count FROM mugs');
+  const mugCount = result.rows[0]?.count as number;
+  
+  if (mugCount === 0) {
+    await seedMugs();
   }
 }
 
-function seedMugs() {
+async function seedMugs() {
   // Hardcoded list of mugs for production reliability
   const mugFiles = [
     'acadia.png', 'aqua.png', 'bacteria.png', 'beatles.png', 'bicycles.png',
@@ -72,22 +87,22 @@ function seedMugs() {
     'sleep.png', 'st-donat.png', 'vibras.png'
   ];
   
-  const insert = db.prepare('INSERT INTO mugs (name, filename) VALUES (?, ?)');
-  const insertMany = db.transaction((mugs: { name: string, filename: string }[]) => {
-    for (const mug of mugs) insert.run(mug.name, mug.filename);
-  });
-
-  const mugData = mugFiles.map(file => ({
-    name: file.replace('.png', '').replace(/-/g, ' '),
-    filename: file
-  }));
-
-  insertMany(mugData);
+  const db = getDB();
+  
+  // Use transaction for better performance
+  await db.batch(
+    mugFiles.map(file => ({
+      sql: 'INSERT INTO mugs (name, filename) VALUES (?, ?)',
+      args: [file.replace('.png', '').replace(/-/g, ' '), file]
+    }))
+  );
+  
   console.log(`Initialized ${mugFiles.length} mugs in database`);
 }
 
-export function getAllMugs(): Mug[] {
-  const mugs = db.prepare(`
+export async function getAllMugs(): Promise<Mug[]> {
+  const db = getDB();
+  const result = await db.execute(`
     SELECT 
       id, 
       name, 
@@ -100,13 +115,20 @@ export function getAllMugs(): Mug[] {
       END as winPercentage
     FROM mugs
     ORDER BY winPercentage DESC, wins DESC
-  `).all() as Mug[];
+  `);
   
-  return mugs;
+  return result.rows.map(row => ({
+    id: row.id as number,
+    name: row.name as string,
+    filename: row.filename as string,
+    wins: row.wins as number,
+    losses: row.losses as number,
+    winPercentage: row.winPercentage as number,
+  }));
 }
 
-export function getRandomMugPair(): [Mug, Mug] {
-  const mugs = getAllMugs();
+export async function getRandomMugPair(): Promise<[Mug, Mug]> {
+  const mugs = await getAllMugs();
   if (mugs.length < 2) {
     throw new Error('Need at least 2 mugs for competition');
   }
@@ -116,20 +138,26 @@ export function getRandomMugPair(): [Mug, Mug] {
   return [shuffled[0], shuffled[1]];
 }
 
-export function recordVote(winnerId: number, loserId: number): void {
-  const updateWinner = db.prepare('UPDATE mugs SET wins = wins + 1 WHERE id = ?');
-  const updateLoser = db.prepare('UPDATE mugs SET losses = losses + 1 WHERE id = ?');
-  const insertVote = db.prepare('INSERT INTO votes (winner_id, loser_id) VALUES (?, ?)');
+export async function recordVote(winnerId: number, loserId: number): Promise<void> {
+  const db = getDB();
   
-  const transaction = db.transaction(() => {
-    updateWinner.run(winnerId);
-    updateLoser.run(loserId);
-    insertVote.run(winnerId, loserId);
-  });
-  
-  transaction();
+  // Use transaction to ensure consistency
+  await db.batch([
+    {
+      sql: 'UPDATE mugs SET wins = wins + 1 WHERE id = ?',
+      args: [winnerId]
+    },
+    {
+      sql: 'UPDATE mugs SET losses = losses + 1 WHERE id = ?',
+      args: [loserId]
+    },
+    {
+      sql: 'INSERT INTO votes (winner_id, loser_id) VALUES (?, ?)',
+      args: [winnerId, loserId]
+    }
+  ]);
 }
 
-export function getLeaderboard(): Mug[] {
+export async function getLeaderboard(): Promise<Mug[]> {
   return getAllMugs();
 }

@@ -4,7 +4,7 @@ import { getDB, getRandomMugPair } from '../../../../api/lib/db';
 export async function GET() {
   try {
     getDB(); // Initialize database
-    const [mug1, mug2] = getRandomMugPair();
+    const [mug1, mug2] = await getRandomMugPair();
     return NextResponse.json({ mug1, mug2 });
   } catch (error) {
     console.error('Error getting battle pair:', error);

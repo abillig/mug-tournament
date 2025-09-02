@@ -4,7 +4,7 @@ import { getDB, getAllMugs } from '../../../../api/lib/db';
 export async function GET() {
   try {
     getDB(); // Initialize database
-    const mugs = getAllMugs();
+    const mugs = await getAllMugs();
     return NextResponse.json(mugs);
   } catch (error) {
     console.error('Error fetching mugs:', error);
