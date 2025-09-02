@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getDB, getAllMugs } from '../../../../api/lib/db';
+import { getAllMugs } from '../../../../api/lib/db';
 
 export async function GET() {
   try {
-    getDB(); // Initialize database
     const mugs = await getAllMugs();
     return NextResponse.json(mugs);
   } catch (error) {

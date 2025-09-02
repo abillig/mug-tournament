@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getDB, getRandomMugPair } from '../../../../api/lib/db';
+import { getRandomMugPair } from '../../../../api/lib/db';
 
 export async function GET() {
   try {
-    getDB(); // Initialize database
     const [mug1, mug2] = await getRandomMugPair();
     return NextResponse.json({ mug1, mug2 });
   } catch (error) {

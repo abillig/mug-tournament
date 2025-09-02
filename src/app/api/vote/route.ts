@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDB, recordVote } from '../../../../api/lib/db';
+import { recordVote } from '../../../../api/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    getDB(); // Initialize database
     const { winnerId, loserId } = await request.json();
     
     if (!winnerId || !loserId || winnerId === loserId) {

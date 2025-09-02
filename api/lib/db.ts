@@ -17,6 +17,7 @@ export interface Vote {
 }
 
 let client: ReturnType<typeof createClient>;
+let initialized = false;
 
 export function getDB() {
   if (!client) {
@@ -35,9 +36,15 @@ export function getDB() {
         url: 'file:mug-tournament.db',
       });
     }
-    initializeDB();
   }
   return client;
+}
+
+async function ensureInitialized() {
+  if (!initialized) {
+    await initializeDB();
+    initialized = true;
+  }
 }
 
 async function initializeDB() {
@@ -102,6 +109,7 @@ async function seedMugs() {
 
 export async function getAllMugs(): Promise<Mug[]> {
   const db = getDB();
+  await ensureInitialized();
   const result = await db.execute(`
     SELECT 
       id, 
@@ -128,6 +136,7 @@ export async function getAllMugs(): Promise<Mug[]> {
 }
 
 export async function getRandomMugPair(): Promise<[Mug, Mug]> {
+  await ensureInitialized();
   const mugs = await getAllMugs();
   if (mugs.length < 2) {
     throw new Error('Need at least 2 mugs for competition');
@@ -140,6 +149,7 @@ export async function getRandomMugPair(): Promise<[Mug, Mug]> {
 
 export async function recordVote(winnerId: number, loserId: number): Promise<void> {
   const db = getDB();
+  await ensureInitialized();
   
   // Use transaction to ensure consistency
   await db.batch([
